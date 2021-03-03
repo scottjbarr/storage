@@ -13,6 +13,7 @@ import (
 )
 
 const (
+	// DefaultRoot is the default top level root path for an S3Storage.
 	DefaultRoot = "/"
 )
 
