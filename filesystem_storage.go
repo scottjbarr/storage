@@ -2,6 +2,8 @@ package storage
 
 import (
 	"context"
+	"errors"
+	"io/fs"
 	"io/ioutil"
 	"os"
 	"strings"
@@ -49,7 +51,18 @@ func (s FilesystemStorage) Write(ctx context.Context,
 func (s FilesystemStorage) Read(ctx context.Context, key string) ([]byte, error) {
 	filename := s.buildFilename(key)
 
-	return ioutil.ReadFile(filename)
+	b, err := ioutil.ReadFile(filename)
+	if err != nil {
+		if os.IsNotExist(err) || errors.Is(err, fs.ErrNotExist) {
+			// specifically the file was not found
+			return nil, ErrNotFound
+		}
+
+		// some other error
+		return nil, err
+	}
+
+	return b, nil
 }
 
 // Remove removes a file, relative to the root of the store.
