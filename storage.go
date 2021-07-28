@@ -7,7 +7,9 @@ import (
 )
 
 var (
-	// ErrNotFound should be returned if the file was not found.
+	// ErrNotFound should be returned if the requested item was not found.
+	//
+	// This error should not be returned from a general search that found zero matching items.
 	ErrNotFound = errors.New("Not found")
 )
 
