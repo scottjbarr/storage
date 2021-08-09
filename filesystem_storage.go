@@ -13,6 +13,7 @@ import (
 const (
 	// DefaultFileMode dafaults to read/write for the user, only.
 	DefaultFileMode = os.FileMode(0600)
+	DefaultDirMode  = os.FileMode(0750)
 )
 
 // FilesystemStorage implements the Storage interface for interacting with the filesystem.
@@ -38,7 +39,8 @@ func (s FilesystemStorage) Write(ctx context.Context,
 	// check options and file mode
 	if options == nil {
 		options = &Options{
-			Mode: DefaultFileMode,
+			Mode:    DefaultFileMode,
+			DirMode: DefaultDirMode,
 		}
 	} else if options.Mode == 0 {
 		// file mode, defaulting to 0600
@@ -54,7 +56,7 @@ func (s FilesystemStorage) Write(ctx context.Context,
 		}
 	}
 
-	f, err := os.OpenFile(filename, os.O_RDWR|os.O_CREATE, options.Mode)
+	f, err := os.OpenFile(filename, os.O_RDWR|os.O_CREATE|os.O_TRUNC, options.Mode)
 	if err != nil {
 		return err
 	}
