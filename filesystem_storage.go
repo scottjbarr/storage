@@ -3,6 +3,7 @@ package storage
 import (
 	"context"
 	"errors"
+	"fmt"
 	"io/fs"
 	"io/ioutil"
 	"os"
@@ -44,7 +45,35 @@ func (s FilesystemStorage) Write(ctx context.Context,
 		options.Mode = DefaultFileMode
 	}
 
-	return ioutil.WriteFile(filename, body, options.Mode)
+	// make sure the parent exists
+	path := getParentDirectory(filename)
+
+	if _, err := os.Stat(path); os.IsNotExist(err) {
+		if err := os.MkdirAll(path, options.DirMode); err != nil {
+			return err
+		}
+	}
+
+	f, err := os.OpenFile(filename, os.O_RDWR|os.O_CREATE, options.Mode)
+	if err != nil {
+		return err
+	}
+
+	defer f.Close()
+
+	if _, err := f.Write(body); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func getParentDirectory(key string) string {
+	// split the key into parts with the filename being the last
+	parts := strings.Split(key, "/")
+
+	// put the parts back together leaving just the full directory path
+	return strings.Join(parts[:len(parts)-1], "/")
 }
 
 // Read will read a file relative to the root of the store.
@@ -79,4 +108,47 @@ func (s FilesystemStorage) buildFilename(key string) string {
 	}
 
 	return strings.Join(parts, "/")
+}
+
+func (s FilesystemStorage) Keys(path string) ([]string, error) {
+	keys := []string{}
+
+	c, err := ioutil.ReadDir(s.Root + "/" + path)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, entry := range c {
+		if entry.IsDir() {
+			continue
+		}
+
+		filename := fmt.Sprintf("%s/%s/%s", s.Root, path, entry.Name())
+
+		keys = append(keys, filename)
+	}
+
+	return keys, nil
+}
+
+func (s FilesystemStorage) All(path string) ([][]byte, error) {
+	keys, err := s.Keys(path)
+	if err != nil {
+		return nil, err
+	}
+
+	objs := [][]byte{}
+
+	for _, filename := range keys {
+		// filename := fmt.Sprintf("%s/%s/%s", s.Root, path, entry.Name())
+
+		b, err := ioutil.ReadFile(filename)
+		if err != nil {
+			return nil, err
+		}
+
+		objs = append(objs, b)
+	}
+
+	return objs, nil
 }
