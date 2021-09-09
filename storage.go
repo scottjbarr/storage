@@ -24,6 +24,15 @@ type ReadWriter interface {
 	Writer
 }
 
+type ReadWriteLister interface {
+	ReadWriter
+	Lister
+}
+
+type Lister interface {
+	All(string) ([][]byte, error)
+}
+
 // Reader interface is for reading an item from the store.
 type Reader interface {
 	Read(context.Context, string) ([]byte, error)

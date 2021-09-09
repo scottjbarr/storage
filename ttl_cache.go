@@ -19,19 +19,23 @@ func NewEntry(b []byte, ttl int64) Entry {
 }
 
 type TTLCache struct {
-	Store ReadWriter
+	Store ReadWriteLister
 	Cache map[string]Entry
 	TTL   int64
 	mu    *sync.RWMutex
 }
 
-func NewTTLCache(store ReadWriter, ttl int64) *TTLCache {
+func NewTTLCache(store ReadWriteLister, ttl int64) *TTLCache {
 	return &TTLCache{
 		Store: store,
 		Cache: map[string]Entry{},
 		TTL:   ttl,
 		mu:    &sync.RWMutex{},
 	}
+}
+
+func (c *TTLCache) All(key string) ([][]byte, error) {
+	return c.Store.All(key)
 }
 
 func (c *TTLCache) Read(ctx context.Context, key string) ([]byte, error) {
