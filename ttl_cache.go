@@ -89,3 +89,17 @@ func (c *TTLCache) Set(key string, b []byte) {
 
 	c.Cache[key] = NewEntry(b, c.TTL)
 }
+
+// All returns all objects in the store.
+func (c *TTLCache) All(path string) ([][]byte, error) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+
+	objs := [][]byte{}
+
+	for _, e := range c.Cache {
+		objs = append(objs, e.Object)
+	}
+
+	return objs, nil
+}
