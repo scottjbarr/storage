@@ -41,7 +41,7 @@ func (s S3Storage) Write(ctx context.Context, key string, body []byte, options *
 
 	poi := s3.PutObjectInput{
 		Bucket: aws.String(s.Bucket),
-		Key:    aws.String(key),
+		Key:    aws.String(s.buildKey(key)),
 		Body:   bytes.NewReader(body),
 	}
 
@@ -69,7 +69,7 @@ func (s S3Storage) Read(ctx context.Context, key string) ([]byte, error) {
 
 	document, err = svc.GetObject(&s3.GetObjectInput{
 		Bucket: aws.String(s.Bucket),
-		Key:    aws.String(key),
+		Key:    aws.String(s.buildKey(key)),
 	})
 
 	if err != nil {
@@ -112,4 +112,12 @@ func (s S3Storage) Remove(ctx context.Context, key string) error {
 	}
 
 	return nil
+}
+
+func (s S3Storage) buildKey(key string) string {
+	if len(s.Root) == 0 {
+		return key
+	}
+
+	return s.Root + "/" + key
 }
